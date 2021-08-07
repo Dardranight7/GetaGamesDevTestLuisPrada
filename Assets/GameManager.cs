@@ -18,10 +18,10 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        uiManager.SetValorUI((tiempoInicio - Time.time).ToString("F0") + "seg");
+        uiManager.SetValorUI((tiempoInicio - Time.time).ToString("00:00"));
         if (tiempoInicio - Time.time < 0)
         {
-            Debug.Log("fin del juego");
+            DardranightCortinilla.DardraCortinilla.CargarEscena(0);
         }
     }
 }

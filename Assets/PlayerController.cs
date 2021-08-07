@@ -53,7 +53,6 @@ public class PlayerController : MonoBehaviour
 
 	void Update()
 	{
-		detectarPoder();
 		Vector2 playerInput;
 		playerInput.x = Input.GetAxis("Horizontal");
 		playerInput.y = Input.GetAxis("Vertical");
@@ -66,7 +65,7 @@ public class PlayerController : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		EstadoUpdate();
+		ActualizarEstado();
 		AjustarVelocidad();
 
 		if (saltando)
@@ -77,16 +76,17 @@ public class PlayerController : MonoBehaviour
 
 		rigidBody.velocity = velocidad;
 		MoverRotacion();
-		ClearState();
+		LimpiarEstado();
 	}
 
-	void detectarPoder()
+	public void AceleracionInstantanea(Vector3 direccion, float potencia)
     {
-		RaycastHit[] objetosGolpeados = Physics.BoxCastAll(transform.position, Vector3.one, transform.forward);
-        foreach (var objeto in objetosGolpeados)
-        {
-			Debug.Log(objeto.collider.name);
-        }
+		rigidBody.AddForce(direccion * potencia * 100, ForceMode.Impulse);
+    }
+
+	public void PoderSalto()
+    {
+		rigidBody.AddForce(transform.forward + transform.up * 500, ForceMode.Impulse);
     }
 
 	void MoverRotacion()
@@ -97,13 +97,13 @@ public class PlayerController : MonoBehaviour
 		llantaDerecha.transform.localRotation = Quaternion.RotateTowards(carrito.transform.localRotation, Quaternion.FromToRotation(transform.forward, Vector3.Lerp(transform.forward, transform.right * Input.GetAxisRaw("Horizontal"), 0.25f)), 180 * Time.fixedDeltaTime);
 	}
 
-	void ClearState()
+	void LimpiarEstado()
 	{
 		conteoToquesSuelo = 0;
 		contactoNormal = Vector3.zero;
 	}
 
-	void EstadoUpdate()
+	void ActualizarEstado()
 	{
 		velocidad = rigidBody.velocity;
 		if (enSuelo)
