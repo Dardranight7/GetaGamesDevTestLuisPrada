@@ -39,6 +39,11 @@ public class ObstaculoDeSuelo : MonoBehaviour
                     break;
                 case 2:
                         FindObjectOfType<GameManager>().AumentarTiempo((int)valor);
+                        gameObject.SetActive(false);
+                    break;
+                case 3:
+                        other.GetComponent<PlayerController>().Banana();
+                        gameObject.SetActive(false);
                     break;
                 default:
                     break;

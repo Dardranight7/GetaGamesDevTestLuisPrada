@@ -20,7 +20,16 @@ public class PlayerController : MonoBehaviour
 	float anguloMaximoSuelo = 25f;
 
 	[SerializeField] GameObject carrito;
+
 	[SerializeField] GameObject llantaIzquierda, llantaDerecha;
+
+	[SerializeField] GameObject visualCarrito ,direccionDerecha, direccionIzquierda;
+
+	[SerializeField] AudioSource audioSource;
+
+	[SerializeField] GameManager gameManager;
+
+	Quaternion rotacionFrente;
 
 	[SerializeField] GameObject targetRotation;
 
@@ -31,6 +40,8 @@ public class PlayerController : MonoBehaviour
 	Vector3 contactoNormal;
 
 	bool saltando;
+
+	bool controlPerdido = false;
 
 	int conteoToquesSuelo;
 
@@ -51,17 +62,34 @@ public class PlayerController : MonoBehaviour
 		OnValidate();
 	}
 
-	void Update()
+    private void Start()
+    {
+		rotacionFrente = visualCarrito.transform.localRotation;
+    }
+
+    void Update()
 	{
 		Vector2 playerInput;
 		playerInput.x = Input.GetAxis("Horizontal");
 		playerInput.y = Input.GetAxis("Vertical");
 		playerInput = Vector2.ClampMagnitude(playerInput, 1f);
-
+        if (controlPerdido)
+        {
+			playerInput = Vector3.zero;
+        }
+        if (gameManager.getFinJuego())
+        {
+			playerInput = Vector3.zero;
+        }
 		velocidadDeseada = transform.forward * playerInput.y * velocidadMaxima;
-		
+		audioSource.volume = Mathf.Log10(reglaDeTres(velocidadMaxima, 0.6f, rigidBody.velocity.sqrMagnitude));
 		saltando |= Input.GetButtonDown("Jump");
 	}
+
+	float reglaDeTres(float a,float b,float c)
+    {
+		return (b * c)/a;
+    }
 
 	void FixedUpdate()
 	{
@@ -89,13 +117,49 @@ public class PlayerController : MonoBehaviour
 		rigidBody.AddForce(transform.forward + transform.up * poder, ForceMode.Impulse);
     }
 
-	void MoverRotacion()
+	public void Banana()
     {
-		rigidBody.MoveRotation(Quaternion.RotateTowards(rigidBody.rotation, targetRotation.transform.rotation, 120 * Time.fixedDeltaTime * Input.GetAxisRaw("Horizontal")));
-		carrito.transform.localRotation = Quaternion.RotateTowards(carrito.transform.localRotation, Quaternion.FromToRotation(ProyectarEnPlanoDeContacto(transform.forward), Vector3.Lerp(ProyectarEnPlanoDeContacto(transform.forward), ProyectarEnPlanoDeContacto(transform.right) * Input.GetAxisRaw("Horizontal"), 0.25f)), 120 * Time.fixedDeltaTime);
-		llantaIzquierda.transform.localRotation = Quaternion.RotateTowards(carrito.transform.localRotation, Quaternion.FromToRotation(transform.forward, Vector3.Lerp(transform.forward, transform.right * Input.GetAxisRaw("Horizontal"), 0.25f)), 180 * Time.fixedDeltaTime);
-		llantaDerecha.transform.localRotation = Quaternion.RotateTowards(carrito.transform.localRotation, Quaternion.FromToRotation(transform.forward, Vector3.Lerp(transform.forward, transform.right * Input.GetAxisRaw("Horizontal"), 0.25f)), 180 * Time.fixedDeltaTime);
+		AceleracionInstantanea(transform.forward, 1);
+		StartCoroutine(PerderControl());
 	}
+
+	IEnumerator PerderControl()
+    {
+		controlPerdido = true;
+		yield return new WaitForSeconds(1.8f);
+		controlPerdido = false;
+    }
+
+	void MoverRotacion()
+	{
+		if (controlPerdido)
+		{
+			visualCarrito.transform.Rotate(new Vector3(0, 360 * Time.fixedDeltaTime, 0));
+			return;
+		}
+		rigidBody.MoveRotation(Quaternion.RotateTowards(rigidBody.rotation, targetRotation.transform.rotation, 120 * Time.fixedDeltaTime * Input.GetAxisRaw("Horizontal")));
+		Quaternion rotacionSobreSuelo = Quaternion.RotateTowards(carrito.transform.rotation,Quaternion.LookRotation(ProyectarEnPlanoDeContacto(transform.forward)),240*Time.fixedDeltaTime);
+		carrito.transform.rotation = rotacionSobreSuelo;
+		llantaIzquierda.transform.localRotation = Quaternion.RotateTowards(llantaIzquierda.transform.localRotation, Quaternion.FromToRotation(transform.forward, Vector3.Lerp(transform.forward, transform.right * Input.GetAxisRaw("Horizontal"), 0.25f)), 180 * Time.fixedDeltaTime);
+		llantaDerecha.transform.localRotation = Quaternion.RotateTowards(llantaDerecha.transform.localRotation, Quaternion.FromToRotation(transform.forward, Vector3.Lerp(transform.forward, transform.right * Input.GetAxisRaw("Horizontal"), 0.25f)), 180 * Time.fixedDeltaTime);
+		visualCarrito.transform.localRotation = Quaternion.RotateTowards(visualCarrito.transform.localRotation, Quaternion.FromToRotation(transform.forward, Direcciones(Input.GetAxisRaw("Horizontal"))),120 * Time.fixedDeltaTime);
+	}
+
+	Vector3 Direcciones(float a)
+    {
+        if (a > 0)
+        {
+			return direccionDerecha.transform.forward;
+        }
+		else if (a < 0)
+        {
+			return direccionIzquierda.transform.forward;
+        }
+        else
+        {
+			return transform.forward;
+        }
+    }
 
 	void LimpiarEstado()
 	{

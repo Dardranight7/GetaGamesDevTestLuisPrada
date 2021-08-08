@@ -11,4 +11,8 @@ public class UserInfo
     [SerializeField] public int indiceSombrero = 0;
     // Settings 
     [SerializeField] public bool enablePostProces = true;
+    // Ranking
+    [SerializeField] public int partidasGanadas = 0;
+    [SerializeField] public int partidasPerdidas = 0;
+    [SerializeField] public float mejorTiempo = 1000;
 }

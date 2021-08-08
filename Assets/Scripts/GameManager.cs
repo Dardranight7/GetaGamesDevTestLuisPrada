@@ -7,26 +7,68 @@ public class GameManager : MonoBehaviour
     [SerializeField] PlayerController playerController;
     [SerializeField] UIManager uiManager;
     [SerializeField] float tiempoJuego;
-    float tiempoInicio;
+    [SerializeField] GameObject VentanaVictoria;
+    [SerializeField] GameObject VentanaPerdiste;
+    bool victoria;
+    bool perdiste;
+    float tiempoTotal;
+    float tiempoIncial;
 
     // Start is called before the first frame update
     void Start()
     {
-        tiempoInicio = Time.time + tiempoJuego;
+        tiempoTotal = Time.time + tiempoJuego;
+        tiempoIncial = Time.time;
     }
 
     // Update is called once per frame
     void Update()
     {
-        uiManager.SetValorUI((tiempoInicio - Time.time).ToString("00:00"));
-        if (tiempoInicio - Time.time < 0)
+        if (victoria)
         {
-            DardranightCortinilla.DardraCortinilla.CargarEscena(0);
+            return;
         }
+        if (perdiste)
+        {
+            return;
+        }
+        uiManager.SetValorUI((tiempoTotal - Time.time).ToString("00:00"));
+        if (tiempoTotal - Time.time < 0)
+        {
+            VentanaPerdiste.SetActive(true);
+            perdiste = true;
+        }
+    }
+
+    public void SetVictoria()
+    {
+        if (perdiste)
+        {
+            return;
+        }
+        victoria = true;
+        VentanaVictoria.SetActive(true);
+    }
+
+    public bool getFinJuego()
+    {
+        if (victoria || perdiste)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public float GetTiempoInicial()
+    {
+        return tiempoIncial;
     }
 
     public void AumentarTiempo(int tiempoExtra = 10)
     {
-        tiempoInicio += tiempoExtra;
+        tiempoTotal += tiempoExtra;
     }
 }
